@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAGP - Vehículos</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 30px auto; padding: 0 15px; color: #222; }
+    h1 { color: #1F3A5F; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #1F3A5F; color: white; }
+    form p { margin: 8px 0; }
+    label { display: inline-block; width: 120px; font-weight: bold; }
+    input, select { padding: 6px; min-width: 220px; }
+    button { background: #1F3A5F; color: white; border: 0; padding: 10px 20px; cursor: pointer; margin-top: 8px; }
+    .errorlist { color: #b00020; list-style: none; padding: 0; margin: 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>Registro de vehículos</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Registrar vehículo</button>
+  </form>
+
+  <h2>Vehículos registrados ({{ vehiculos|length }})</h2>
+  <table>
+    <tr><th>Placa</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Tipo</th><th>Apartamento</th></tr>
+    {% for v in vehiculos %}
+    <tr>
+      <td>{{ v.placa }}</td>
+      <td>{{ v.marca }}</td>
+      <td>{{ v.modelo }}</td>
+      <td>{{ v.color }}</td>
+      <td>{{ v.tipo }}</td>
+      <td>{{ v.id_apartamento.numero }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6">Aún no hay vehículos registrados.</td></tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
