@@ -1,0 +1,36 @@
+{% extends 'parqueadero/base.html' %}
+{% block titulo %}Portería{% endblock %}
+{% block contenido %}
+<h1 class="h3 mb-3">Portería: entradas y salidas</h1>
+<div class="card shadow-sm mb-4"><div class="card-body">
+  <form method="post" class="row g-2 align-items-end">{% csrf_token %}
+    <div class="col-12 col-md-5"><label class="form-label">Placa del vehículo</label>
+      <input name="placa" class="form-control form-control-lg text-uppercase" maxlength="10" placeholder="ABC123" required autofocus></div>
+    <div class="col-6 col-md-3"><button name="accion" value="entrada" class="btn btn-success btn-lg w-100">Registrar entrada</button></div>
+    <div class="col-6 col-md-3"><button name="accion" value="salida" class="btn btn-warning btn-lg w-100">Registrar salida</button></div>
+  </form>
+</div></div>
+
+{% if mios %}
+<h2 class="h5">Mis vehículos</h2>
+<div class="list-group shadow-sm mb-4">
+  {% for v, dentro in mios %}
+  <div class="list-group-item d-flex justify-content-between align-items-center">
+    <span><strong>{{ v.placa }}</strong> · {{ v.marca }} {{ v.modelo }}
+      <span class="badge {% if dentro %}bg-success{% else %}bg-secondary{% endif %} ms-2">{% if dentro %}Dentro{% else %}Fuera{% endif %}</span></span>
+    <form method="post">{% csrf_token %}<input type="hidden" name="placa" value="{{ v.placa }}">
+      {% if dentro %}<button name="accion" value="salida" class="btn btn-sm btn-warning">Registrar salida</button>
+      {% else %}<button name="accion" value="entrada" class="btn btn-sm btn-success">Registrar entrada</button>{% endif %}</form>
+  </div>{% endfor %}
+</div>
+{% endif %}
+
+<h2 class="h5">Vehículos dentro del parqueadero ({{ dentro|length }})</h2>
+<div class="table-responsive card shadow-sm">
+  <table class="table table-striped mb-0">
+    <thead class="table-dark"><tr><th>Placa</th><th>Apto</th><th>Espacio</th><th>Entrada</th></tr></thead>
+    <tbody>{% for a in dentro %}<tr><td>{{ a.vehiculo.placa }}</td><td>{{ a.vehiculo.apartamento.numero }}</td><td>{{ a.espacio.identificador }}</td><td>{{ a.fecha_hora_entrada|date:'d/m/Y H:i' }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="text-center text-muted py-3">No hay vehículos dentro.</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% endblock %}

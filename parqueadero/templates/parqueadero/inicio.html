@@ -1,0 +1,47 @@
+{% extends 'parqueadero/base.html' %}
+{% block titulo %}Inicio{% endblock %}
+{% block contenido %}
+<h1 class="h3 mb-3">Hola, {{ user.nombre }} <small class="text-muted fs-6">({{ user.get_rol_display }})</small></h1>
+
+{% if user.rol != 'RESIDENTE' %}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4"><div class="card sagp-card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Vehículos dentro</div><div class="display-6">{{ vehiculos_dentro }}</div></div></div></div>
+  <div class="col-6 col-md-4"><div class="card sagp-card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Visitas activas</div><div class="display-6">{{ visitas_activas }}</div></div></div></div>
+  <div class="col-12 col-md-4"><div class="card sagp-card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Visitas con tiempo excedido</div><div class="display-6 {% if visitas_excedidas %}text-danger{% endif %}">{{ visitas_excedidas|length }}</div></div></div></div>
+</div>
+{% endif %}
+
+<h2 class="h5">Ocupación del parqueadero</h2>
+<div class="table-responsive card shadow-sm mb-4">
+  <table class="table mb-0">
+    <thead class="table-dark"><tr><th>Tipo de espacio</th><th>Total</th><th>Libres</th><th>Ocupados</th><th>No disponibles</th></tr></thead>
+    <tbody>
+    {% for o in ocupacion %}<tr><td>{{ o.tipo }}</td><td>{{ o.total }}</td><td class="text-success fw-bold">{{ o.libres }}</td><td>{{ o.ocupados }}</td><td>{{ o.no_disp }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="text-muted text-center py-3">Aún no hay espacios configurados.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if user.rol == 'RESIDENTE' %}
+<h2 class="h5">Mis vehículos</h2>
+<div class="list-group shadow-sm mb-4">
+  {% for v, dentro in mis_vehiculos %}
+  <div class="list-group-item d-flex justify-content-between"><span><strong>{{ v.placa }}</strong> · {{ v.marca }} {{ v.modelo }} · {{ v.color }}</span>
+    <span class="badge {% if dentro %}bg-success{% else %}bg-secondary{% endif %}">{% if dentro %}Dentro{% else %}Fuera{% endif %}</span></div>
+  {% empty %}<div class="list-group-item text-muted">No tiene vehículos registrados.</div>{% endfor %}
+</div>
+{% else %}
+{% if visitas_excedidas %}
+<div class="alert alert-warning"><strong>Visitas con tiempo excedido:</strong>
+  {% for v in visitas_excedidas %}{{ v.visitante.nombre }} (Apto {{ v.apartamento.numero }}){% if not forloop.last %}, {% endif %}{% endfor %}</div>
+{% endif %}
+<h2 class="h5">Últimos intentos no autorizados</h2>
+<div class="list-group shadow-sm">
+  {% for i in intentos %}<div class="list-group-item"><span class="badge bg-danger me-2">{{ i.get_tipo_display }}</span>{{ i.motivo }} <span class="text-muted small">· {{ i.fecha_hora|date:'d/m/Y H:i' }}</span></div>
+  {% empty %}<div class="list-group-item text-muted">Sin intentos registrados.</div>{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

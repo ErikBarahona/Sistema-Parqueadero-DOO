@@ -1,0 +1,38 @@
+{% extends 'parqueadero/base.html' %}
+{% block titulo %}Visitantes{% endblock %}
+{% block contenido %}
+<h1 class="h3 mb-3">Visitantes</h1>
+<div class="row g-4">
+  <div class="col-lg-5">
+    <form method="post" class="card card-body shadow-sm">{% csrf_token %}
+      <h2 class="h5">Registrar entrada de visitante</h2>
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+      {% for campo in form %}
+        <div class="mb-2"><label class="form-label mb-0" for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
+          {% for e in campo.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+      {% endfor %}
+      <button class="btn btn-primary mt-2">Registrar entrada</button>
+    </form>
+  </div>
+  <div class="col-lg-7">
+    <h2 class="h5">Visitantes dentro ({{ activas|length }})</h2>
+    <div class="table-responsive card shadow-sm">
+      <table class="table table-striped mb-0 align-middle">
+        <thead class="table-dark"><tr><th>Visitante</th><th>Apto</th><th>Entrada</th><th>Espacio</th><th></th></tr></thead>
+        <tbody>
+        {% for v in activas %}
+          <tr {% if v.excedida %}class="table-danger"{% endif %}>
+            <td>{{ v.visitante.nombre }}<br><small class="text-muted">{{ v.visitante.documento }}{% if v.visitante.placa %} · {{ v.visitante.placa }}{% endif %}</small></td>
+            <td>{{ v.apartamento.numero }}</td>
+            <td>{{ v.fecha_hora_entrada|date:'d/m H:i' }}{% if v.excedida %}<br><span class="badge bg-danger">Tiempo excedido</span>{% endif %}</td>
+            <td>{{ v.espacio.identificador|default:'—' }}</td>
+            <td><form method="post">{% csrf_token %}<input type="hidden" name="visita_id" value="{{ v.pk }}">
+              <button name="accion" value="salida" class="btn btn-sm btn-warning">Registrar salida</button></form></td>
+          </tr>
+        {% empty %}<tr><td colspan="5" class="text-center text-muted py-3">No hay visitantes dentro.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
