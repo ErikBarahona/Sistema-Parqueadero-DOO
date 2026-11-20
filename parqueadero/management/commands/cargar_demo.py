@@ -1,16 +1,25 @@
 """Carga datos de demostración: python manage.py cargar_demo"""
+import os
+
 from django.core.management.base import BaseCommand
 
 from parqueadero.models import Apartamento, Espacio, Parqueadero, Permiso, Usuario, Vehiculo
 
-CLAVE_ADMIN = 'Admin2026*'
-CLAVE_RESIDENTE = 'Residente2026*'
+CLAVE_ADMIN = os.environ.get('DEMO_CLAVE_ADMIN', 'Admin2026*')
+CLAVE_RESIDENTE = os.environ.get('DEMO_CLAVE_RESIDENTE', 'Residente2026*')
 
 
 class Command(BaseCommand):
     help = 'Carga un parqueadero, apartamentos, usuarios, vehículos y espacios de demostración.'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--solo-si-env', action='store_true',
+                            help='Solo carga los datos si la variable de entorno CARGAR_DEMO es "true".')
+
     def handle(self, *args, **options):
+        if options['solo_si_env'] and os.environ.get('CARGAR_DEMO', '').lower() != 'true':
+            self.stdout.write('CARGAR_DEMO no está activo: no se cargan datos de demostración.')
+            return
         parq, _ = Parqueadero.objects.get_or_create(
             nombre='Edificio Los Almendros',
             defaults={'direccion': 'Calle 45 # 12-30, Bogotá', 'telefono': '6011234567', 'capacidad': 8})

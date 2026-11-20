@@ -34,6 +34,12 @@ if not DEBUG and SECRET_KEY.startswith('clave-solo'):
 ALLOWED_HOSTS = _lista('ALLOWED_HOSTS', 'localhost,127.0.0.1,.ondigitalocean.app')
 CSRF_TRUSTED_ORIGINS = _lista('CSRF_TRUSTED_ORIGINS', 'https://*.ondigitalocean.app')
 
+# Render asigna el dominio automáticamente en esta variable
+_host_render = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if _host_render:
+    ALLOWED_HOSTS.append(_host_render)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_host_render}')
+
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.auth',

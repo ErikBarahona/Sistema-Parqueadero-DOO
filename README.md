@@ -71,43 +71,48 @@ python manage.py runserver
 
 ---
 
-## 3. Publicar en DigitalOcean (acceso desde cualquier navegador)
+## 3. Publicar en Render (acceso desde cualquier navegador)
+
+Render ofrece un plan gratuito para aplicaciones Django, sin tarjeta de crédito. Condiciones del plan gratuito
+(verifícalas en https://render.com/docs/free): el servicio se apaga tras 15 minutos sin uso y tarda cerca de un
+minuto en despertar, y la base de datos gratuita **vence a los 30 días**.
 
 ### 3.1 Subir el código a GitHub
-Sube la carpeta completa, **incluida `parqueadero/migrations/`** (se genera con `makemigrations`).
-El archivo `.env` y la carpeta `venv` NO se suben (ya están en `.gitignore`).
-
-### 3.2 Base de datos
-1. DigitalOcean → *Databases → Create → PostgreSQL* (plan básico, región más cercana).
-2. Dentro del clúster crea la base `sagp_app`.
-3. En *Trusted Sources* agrega tu IP (para el paso 3.4) y, después, tu aplicación.
-4. Copia la *Connection string* (`postgresql://usuario:clave@host:puerto/sagp_app?sslmode=require`).
-
-### 3.3 Aplicación
-1. *App Platform → Create App* → conecta tu repositorio de GitHub (rama `main`).
-2. Run command: `gunicorn --worker-tmp-dir /dev/shm sagp_web.wsgi` (HTTP port 8080).
-3. Variables de entorno:
-
-| Variable | Valor |
-|---|---|
-| `DEBUG` | `False` |
-| `SECRET_KEY` | una clave larga aleatoria (`python -c "import secrets; print(secrets.token_urlsafe(50))"`) |
-| `DATABASE_URL` | la *Connection string* de la base |
-| `ALLOWED_HOSTS` | `.ondigitalocean.app` (y tu dominio, si tienes) |
-| `CSRF_TRUSTED_ORIGINS` | `https://*.ondigitalocean.app` |
-
-4. Si los estilos propios no cargan, agrega el comando de build `python manage.py collectstatic --noinput`.
-
-### 3.4 Crear las tablas en la nube
-Desde tu computador, apuntando a la base de DigitalOcean (tu IP debe estar en *Trusted Sources*):
+1. Crea un repositorio vacío en https://github.com/new (por ejemplo `sagp`).
+2. En la carpeta del proyecto (la que contiene `manage.py`):
 
 ```powershell
-$env:DATABASE_URL = "postgresql://usuario:clave@host:puerto/sagp_app?sslmode=require"
-python manage.py migrate
-python manage.py cargar_demo      # opcional: datos de demostración
+git init
+git add .
+git commit -m "SAGP"
+git branch -M main
+git remote add origin https://github.com/TU_USUARIO/sagp.git
+git push -u origin main
 ```
 
-Abre la URL pública de la app: funciona en cualquier navegador y equipo, con HTTPS.
+Comprueba en GitHub que se subieron `render.yaml`, `requirements.txt` y la carpeta `parqueadero/migrations/`
+con el archivo `0001_initial.py`. El `.env` y el `venv` no se suben (están en `.gitignore`).
+
+### 3.2 Crear todo con el Blueprint
+1. Entra a https://dashboard.render.com y crea tu cuenta (puedes usar GitHub).
+2. *New → Blueprint* → elige tu repositorio.
+3. Render lee `render.yaml`, crea la base PostgreSQL `sagp-db` y el servicio web `sagp`.
+4. Te pide dos valores: `DEMO_CLAVE_ADMIN` y `DEMO_CLAVE_RESIDENTE`. Escribe contraseñas que tú elijas.
+5. Pulsa *Apply* y espera el despliegue (unos minutos). Al terminar, abre la URL `https://sagp-xxxx.onrender.com`.
+
+Durante el despliegue se ejecutan `migrate` (crea las tablas) y `cargar_demo` (datos de demostración).
+Ingresa con `admin` y la contraseña que pusiste en `DEMO_CLAVE_ADMIN`.
+
+### 3.3 Después del despliegue
+- Cuando ya no necesites los datos de demostración, cambia la variable `CARGAR_DEMO` a `false`.
+- Cada `git push` a la rama `main` vuelve a desplegar automáticamente.
+- Si el despliegue falla con un error de Python o de Django, revisa los *Logs* del servicio y la versión de Python
+  (puedes fijarla con la variable de entorno `PYTHON_VERSION`).
+
+### Alternativa: DigitalOcean
+El mismo código funciona en DigitalOcean App Platform con una base PostgreSQL gestionada: define `DATABASE_URL`,
+`SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS=.ondigitalocean.app` y `CSRF_TRUSTED_ORIGINS=https://*.ondigitalocean.app`,
+y usa como comando de ejecución `gunicorn sagp_web.wsgi`.
 
 ---
 
@@ -161,4 +166,5 @@ parqueadero/
   contexto.py      contexto global de plantillas (notificaciones sin leer)
   templates/       plantillas HTML (Bootstrap)
   management/commands/cargar_demo.py   datos de demostración
+render.yaml        Blueprint de despliegue en Render
 ```
